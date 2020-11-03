@@ -1,22 +1,21 @@
-const TWO_PI = 2*Math.PI
+const smallestSecondHand = 9,
+initAngle = - Math.PI,
+   TWO_PI = 2*Math.PI,
+      dpr = devicePixelRatio,
+   shrink = 2/3,
 
-const dpr = devicePixelRatio
+    width = innerWidth, height = innerHeight,
+halfWidth = width / 2, halfHeight = height / 2,
+   radius = Math.min(halfHeight, halfWidth),
 
-const width = innerWidth, height = innerHeight
-const halfWidth = width / 2, halfHeight = height / 2
-const radius = Math.min(halfHeight, halfWidth)
-
-const canvas = document.getElementById("canvas")
-const ctx = canvas.getContext("2d")
+   canvas = document.getElementById("canvas"),
+      ctx = canvas.getContext("2d")
 
 canvas.style.width = width + "px"
 canvas.style.height = height + "px"
 canvas.width = Math.floor(width * dpr)
 canvas.height = Math.floor(height * dpr)
 
-
-const shrink = 2/3
-const smallestSecondHand = 9
 
 // Calculate the length of the second hand
 // L:   radius = min(halfHeight, halfWidth)
@@ -42,22 +41,22 @@ calc.a = Math.log( smallestSecondHand / (radius * (1 - shrink) + smallestSecondH
 calc.n = calc.a / calc.b
 calc.l = smallestSecondHand / Math.pow(shrink, calc.n)
 
+const
+secondHandLength = calc.l,
+minuteHandLength = secondHandLength,
+  hourHandLength = minuteHandLength,
 
-const secondHandLength = calc.l
-const minuteHandLength = secondHandLength
-const hourHandLength = minuteHandLength * shrink
+handWidth     = 2,
+handWidthHalf = handWidth / 2
 
-const handWidth = 2
-const handWidthHalf = handWidth / 2
-
-const initAngle = - Math.PI
-let secondHandAngle = ( 0 * Math.PI / 180)
-let minuteHandAngle = (45 * Math.PI / 180)
-let hourHandAngle   = (30 * Math.PI / 180)
+let
+secondHandAngle = ( 0 * Math.PI / 180),
+minuteHandAngle = (45 * Math.PI / 180),
+hourHandAngle   = (30 * Math.PI / 180)
 
 
-function action() {
-  requestAnimationFrame(action)
+function tick() {
+  requestAnimationFrame(tick)
 
 
   // hands rotation
@@ -66,7 +65,7 @@ function action() {
   hourHandAngle += 0.017
 
 
-  color = 'hsl('+ ( hourHandAngle % TWO_PI ) / TWO_PI * 360 +',100%,50%)'
+  color = 'hsl(' + ( hourHandAngle % TWO_PI ) / TWO_PI * 360 + ', 100%, 50%)'
 
 
   // initial clock setup
@@ -77,8 +76,12 @@ function action() {
   ctx.rotate(initAngle)
 
 
+  // recursion
+  ctx.fillStyle = color
+  drawHands(secondHandLength, minuteHandLength, hourHandLength)
+
+
   // clock face
-  ctx.fillStyle = 'black'
 
   // every 5 minutes
   ctx.save()
@@ -99,12 +102,8 @@ function action() {
   ctx.restore()
 
 
-  // recursion
-  drawHands(secondHandLength, minuteHandLength, hourHandLength)
-
-
   // hands
-  ctx.fillStyle = color
+  ctx.fillStyle = 'hsla(0, 0%, 90%, 0.8)'
 
   // secondHand
   ctx.save()
@@ -128,44 +127,32 @@ function action() {
 
 function drawHands(secondHandLength, minuteHandLength, hourHandLength) {
   if (secondHandLength >= smallestSecondHand ) {
-    drawSecondHand(secondHandLength, minuteHandLength, hourHandLength)
-    drawMinuteHand(secondHandLength, minuteHandLength, hourHandLength)
-    drawHourHand(secondHandLength, minuteHandLength, hourHandLength)
+
+    // second
+    ctx.save()
+    ctx.rotate(secondHandAngle)
+    ctx.fillRect(-handWidthHalf, 0, handWidth, secondHandLength)
+    ctx.translate(0, secondHandLength)
+    drawHands(secondHandLength * shrink, minuteHandLength * shrink, hourHandLength * shrink)
+    ctx.restore()
+
+    // minute
+    ctx.save()
+    ctx.rotate(minuteHandAngle)
+    ctx.fillRect(-handWidthHalf, 0, handWidth, minuteHandLength)
+    ctx.translate(0, minuteHandLength)
+    drawHands(secondHandLength * shrink, minuteHandLength * shrink, hourHandLength * shrink)
+    ctx.restore()
+
+    // hour
+    ctx.save()
+    ctx.rotate(hourHandAngle)
+    ctx.fillRect(-handWidthHalf, 0, handWidth, hourHandLength)
+    ctx.translate(0, hourHandLength)
+    drawHands(secondHandLength * shrink, minuteHandLength * shrink, hourHandLength * shrink)
+    ctx.restore()
   }
 }
 
 
-function drawSecondHand(secondHandLength, minuteHandLength, hourHandLength) {
-  ctx.save()
-  ctx.fillStyle = color
-  ctx.rotate(secondHandAngle)
-  ctx.fillRect(-handWidthHalf, 0, handWidth, secondHandLength)
-  ctx.translate(0, secondHandLength)
-  drawHands(secondHandLength * shrink, minuteHandLength * shrink, hourHandLength * shrink)
-  ctx.restore()
-}
-
-
-function drawMinuteHand(secondHandLength, minuteHandLength, hourHandLength) {
-  ctx.save()
-  ctx.fillStyle = color
-  ctx.rotate(minuteHandAngle)
-  ctx.fillRect(-handWidthHalf, 0, handWidth, minuteHandLength)
-  ctx.translate(0, minuteHandLength)
-  drawHands(secondHandLength * shrink, minuteHandLength * shrink, hourHandLength * shrink)
-  ctx.restore()
-}
-
-
-function drawHourHand(secondHandLength, minuteHandLength, hourHandLength) {
-  ctx.save()
-  ctx.globalAlpha = 0.1
-  ctx.rotate(hourHandAngle)
-  ctx.fillRect(-handWidthHalf, 0, handWidth, hourHandLength)
-  ctx.translate(0, hourHandLength)
-  drawHands(secondHandLength * shrink, minuteHandLength * shrink, hourHandLength * shrink)
-  ctx.restore()
-}
-
-
-requestAnimationFrame(action)
+requestAnimationFrame(tick)
